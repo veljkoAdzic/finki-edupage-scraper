@@ -4,7 +4,7 @@ from flask_cors import CORS, cross_origin
 import sqlite3
 
 from storage import getDBPath
-from utils import getLessonsByClassID, searchLessonsByName
+from utils import *
 
 json.provider.DefaultJSONProvider.ensure_ascii = False
 
@@ -28,7 +28,7 @@ def closeDatabase(exception=None):
 def home_path():
     return "Home page"
 
-# api classes endpoint
+# api classes endpoint - get classess (optional filter based on year or name)
 @app.route("/api/classes")
 def api_classes():
 
@@ -56,9 +56,9 @@ def api_classes():
 
     return jsonify(res), 200
 
+# api timetable endpoint - search classess based on class id or class name
 @app.route("/api/timetable")
 def api_timetable():
-
     classID = request.args.get("id", None)
     name = request.args.get("name", None)
 
@@ -69,6 +69,10 @@ def api_timetable():
     # blocking both queries
     if classID and name:
         return jsonify({"error": "Invalid query! Search by id or name."}), 400
+
+    # filter out wildcard characters
+    if name and (name.find('%') != -1 or name.find('_') != -1):
+        return jsonify({"error": "Invalid query!"}), 400
 
     result = {}
 
@@ -87,6 +91,31 @@ def api_timetable():
 
     return jsonify(result), 200
 
+# api teachers endpoint - search classess with specific teacher
+@app.route("/api/teachers")
+def api_teachers():
+    name = request.args.get("name", None)
+    
+    # must have name
+    if name == None:
+        return jsonify({"error": "Missing query!"}), 400
+
+    # block if wildcard character is in name
+    if name.find('%') != -1 or name.find('_') != -1:
+        return jsonify({"error": "Invalid query!"}), 400
+
+    result = {}
+
+    # get data
+    cur = getDatabase().cursor()
+    result = seatchLessonsByTeacher(cur, name)
+    cur.close()
+
+    if len(result) == 0:
+        return jsonify({"error": "No results!"}), 400
+
+    return jsonify(result), 200
+    
 
 if __name__ == "__main__":
     app.run(host="192.168.100.18", port=369, debug=True)

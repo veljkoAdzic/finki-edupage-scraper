@@ -69,10 +69,9 @@ def searchLessonsByName(cur: Cursor, name: str):
         return []
     
     nameQuery = f"%{name}%"
-    print(nameQuery)
 
     # Get subject name
-    cur.execute("SELECT id, name FROM subjects WHERE LOWER(name) LIKE LOWER(?)", (nameQuery,))
+    cur.execute("SELECT id, name FROM subjects WHERE name LIKE ?", (nameQuery,))
     subjects = cur.fetchall()
 
     for subjectID, subject in subjects:
@@ -120,4 +119,74 @@ def searchLessonsByName(cur: Cursor, name: str):
                     "day": day
                 })
 
+    return result
+
+def seatchLessonsByTeacher(cur: Cursor, name: str):
+    result = [] # list of rows
+
+    if len(name) == 0:
+        return []
+
+    queryName = f"%{name}%"
+
+    # get teacher ids
+    cur.execute("SELECT id, short FROM teachers WHERE short LIKE ?", (queryName,))
+    teacherIDs = [t[0] for t in cur.fetchall()]
+
+    if len(teacherIDs) == 0:
+        return []
+
+    # Get lessons
+    cur.execute(f"SELECT (lesson_id) FROM LessonsTeachers WHERE teacher_id IN ({','.join(['?']*len(teacherIDs))})", teacherIDs)
+    lessonIDs = cur.fetchall()
+
+    for lessonID in lessonIDs:
+        # Get lesson data
+        cur.execute("SELECT groupnames, durationperiods, subjectId FROM lessons WHERE id == (?)", lessonID)
+        lesson = cur.fetchone()
+        if not lesson: continue
+        group, duration, subjectID = lesson
+
+        # Get subject name
+        cur.execute("SELECT (name) FROM subjects WHERE id == (?)", (subjectID,))
+        sub = cur.fetchone()
+        subject = sub[0] if sub else "-"
+
+        # get current teacher ids
+        cur.execute("SELECT teacher_id FROM LessonsTeachers WHERE lesson_id == ?", lessonID)
+        currTeacherIDs = [t[0] for t in cur.fetchall()]
+
+        # get teachers
+        placeholders = ','.join(['?'] * len(currTeacherIDs))
+        cur.execute(f"SELECT (short) FROM teachers WHERE id IN ({placeholders})", currTeacherIDs)
+        teachers = ', '.join([t[0] for t in cur.fetchall() ])
+        
+        # get cards
+        cur.execute("SELECT id, period, days FROM cards WHERE lessonid == (?)", lessonID)
+        cards = cur.fetchall()
+
+        for cardID, period, day in cards:
+            # Get start time
+            cur.execute("SELECT (starttime) FROM periods WHERE id == (?)", (period,))
+            startTime = cur.fetchone()[0] 
+
+            # get location
+            location = "-"
+            cur.execute("SELECT (classroom_id) FROM CardsClassrooms WHERE card_id == (?)", (cardID,))
+            classroomID = cur.fetchone()
+            if classroomID:
+                cur.execute("SELECT (short) FROM classrooms WHERE id == (?)", classroomID)
+                l = cur.fetchone()
+                location = l[0] if l else "-"
+        
+            result.append({
+                "subject": subject,
+                "teachers": teachers,
+                "group": group,
+                "location": location,
+                "startTime": startTime,
+                "duration": duration,
+                "day": day
+            })
+    
     return result
