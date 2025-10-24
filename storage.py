@@ -57,7 +57,7 @@ def storeData(jsonBlob):
     cursor = conn.cursor()
 
     # Create table
-    with open('createTables.sql') as file:
+    with open('sql/createTables.sql') as file:
         sql = file.read()
     cursor.executescript(sql)
     conn.commit()
@@ -90,6 +90,12 @@ def storeData(jsonBlob):
         
         conn.commit()
 
+    # Prune table
+    with open('sql/pruneTables.sql') as file:
+        sql = file.read()
+    cursor.executescript(sql)
+    conn.commit()
+
     cursor.close()
     conn.close()
 
@@ -108,6 +114,10 @@ def parseJsonBlob(blob) -> dict[str, dict]:
             if table["id"] == "cards": # converting mystery days to ind
                 if len(row["days"]) == 0: continue
                 row["days"] = row["days"].index('1')
+            
+            if table["id"] == "classes":
+                row["name"] = row["name"].strip()
+                row["short"] = row["short"].strip()
             
             entries[row["id"]] = row
         res[table["id"]] = entries

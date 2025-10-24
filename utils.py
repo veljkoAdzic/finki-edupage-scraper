@@ -1,6 +1,95 @@
 from sqlite3 import Cursor
 
-def getLessonsByClassID(cur:Cursor, classID):
+### BETTER API UTILS
+def __format_data(cur: Cursor):
+    res = []
+
+    appended_lessons = {}
+
+    for lesson_id, subject, teacher, group, location, startTime, duration, day in cur.fetchall():
+        if lesson_id not in appended_lessons.keys():
+          appended_lessons[lesson_id] = len(res)
+          res.append({
+            "subject": subject,
+            "teachers": teacher,
+            "group": group,
+            "location": location,
+            "startTime": startTime,
+            "duration": duration,
+            "day": day
+          })
+        else:
+          entry = res[ appended_lessons[lesson_id] ]
+          entry["teachers"] = entry["teachers"] + ', ' + teacher
+          res[ appended_lessons[lesson_id] ] = entry
+    
+    return res
+
+
+def getLessonsByClassID(cur: Cursor, classID:str):
+
+    with open("sql/queryLessonsByClassID.sql") as f:
+        sql = f.read()
+
+    cur.execute(sql, (classID,))
+
+    return __format_data(cur)
+
+def searchLessonsByName(cur: Cursor, name: str):    
+    nameQuery = f"%{name}%"
+
+    with open("sql/queryLessonsByName.sql") as f:
+        sql = f.read()
+
+    cur.execute(sql, (nameQuery,))
+
+    return __format_data(cur)
+
+def seatchLessonsByTeacher(cur: Cursor, name: str):
+    if len(name) == 0:
+        return []
+
+    nameQuery = f"%{name}%"
+
+    with open("sql/queryLessonsByName.sql") as f:
+        sql = f.read()
+
+    cur.execute(sql, (nameQuery,))
+
+    return __format_data(cur)
+
+### QUERY VALIDATION ###
+def validateTimetableQueries(classID, name):
+    # requires id or name
+    if classID == None and name == None:
+        return "Missing query!"
+    
+    # blocking both queries
+    if classID and name:
+        return "Invalid query! Search by id or name."
+
+    # filter out wildcard characters
+    if name and (name.find('%') != -1 or name.find('_') != -1):
+        return "Invalid query - Illegal characters in query!"
+
+    # Valid queries
+    return None
+
+def validateTeacherQuery(name):
+    # must have name
+    if name == None:
+        return "Missing query!"
+
+    # block if wildcard character is in name
+    if name.find('%') != -1 or name.find('_') != -1:
+        return "Invalid query - Illegal characters in query!"
+    
+    return None
+
+
+
+### LEGACY API UTILS ###
+def getLessonsByClassID_legacy(cur:Cursor, classID):
     result = [] # list of rows
 
     # Get lesson ids
@@ -62,7 +151,7 @@ def getLessonsByClassID(cur:Cursor, classID):
 
     return result
         
-def searchLessonsByName(cur: Cursor, name: str):
+def searchLessonsByName_legacy(cur: Cursor, name: str):
     result = []
 
     if len(name) == 0: # safety
@@ -121,7 +210,7 @@ def searchLessonsByName(cur: Cursor, name: str):
 
     return result
 
-def seatchLessonsByTeacher(cur: Cursor, name: str):
+def seatchLessonsByTeacher_legacy(cur: Cursor, name: str):
     result = [] # list of rows
 
     if len(name) == 0:

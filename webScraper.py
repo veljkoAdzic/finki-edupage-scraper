@@ -45,5 +45,5 @@ def scrapeForData():
     if json_data:
         storeData(json_data)
 
-if __name__ == "__main__":
-    scrapeForData()
+# if __name__ == "__main__":
+#     scrapeForData()

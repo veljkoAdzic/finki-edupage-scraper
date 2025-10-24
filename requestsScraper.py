@@ -29,15 +29,13 @@ def scrape():
 		rgd = s.post(regularGetDataURL, json = regularGetDataPayload).json()
 
 		s.post(mainDBAccessorURL, json = mainDBAccessorPayload) # just in case
-
-		print(rgd["r"]["dbiAccessorRes"]["tables"][:30])
-
 		return rgd
 
 from storage import storeData
 import json
 
 if __name__ == "__main__":
-	jsonBlob = scrape()
-	storeData(json.dumps(jsonBlob))
-	print("done")
+	jsonBlob = json.dumps( scrape() )
+	storeData(jsonBlob)
+
+	print("Scraping DONE!")

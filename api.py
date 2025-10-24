@@ -62,17 +62,10 @@ def api_timetable():
     classID = request.args.get("id", None)
     name = request.args.get("name", None)
 
-    # requires id or name
-    if classID == None and name == None:
-        return jsonify({"error": "Missing query!"}), 400
-    
-    # blocking both queries
-    if classID and name:
-        return jsonify({"error": "Invalid query! Search by id or name."}), 400
+    err = validateTimetableQueries(classID, name)
 
-    # filter out wildcard characters
-    if name and (name.find('%') != -1 or name.find('_') != -1):
-        return jsonify({"error": "Invalid query!"}), 400
+    if err != None:
+        return jsonify({"error": err}), 401
 
     result = {}
 
@@ -96,13 +89,10 @@ def api_timetable():
 def api_teachers():
     name = request.args.get("name", None)
     
-    # must have name
-    if name == None:
-        return jsonify({"error": "Missing query!"}), 400
+    err = validateTeacherQuery(name)
 
-    # block if wildcard character is in name
-    if name.find('%') != -1 or name.find('_') != -1:
-        return jsonify({"error": "Invalid query!"}), 400
+    if err != None:
+        return jsonify({"error": err}), 400
 
     result = {}
 

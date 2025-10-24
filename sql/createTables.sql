@@ -30,20 +30,22 @@ CREATE TABLE IF NOT EXISTS classrooms (
 -- );
 
 CREATE TABLE IF NOT EXISTS LessonsClass (
-    id INTEGER PRIMARY KEY,
+    -- id INTEGER PRIMARY KEY,
     lesson_id TEXT NOT NULL,
     class_id TEXT NOT NULL,
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id),
-    FOREIGN KEY (class_id) REFERENCES classes(id)
-);
+    PRIMARY KEY (lesson_id, class_id),
+    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS LessonsTeachers (
-    id INTEGER PRIMARY KEY,
+    -- id INTEGER PRIMARY KEY,
     lesson_id TEXT NOT NULL,
     teacher_id TEXT NOT NULL,
-    FOREIGN KEY (lesson_id) REFERENCES lessons(id),
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id)
-);
+    PRIMARY KEY (lesson_id, teacher_id)
+    FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE ON UPDATE CASCADE
+)WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS lessons (
     id TEXT PRIMARY KEY,
@@ -54,12 +56,13 @@ CREATE TABLE IF NOT EXISTS lessons (
 );
 
 CREATE TABLE IF NOT EXISTS CardsClassrooms (
-    id INTEGER PRIMARY KEY,
+    -- id INTEGER PRIMARY KEY,
     card_id TEXT NOT NULL,
     classroom_id TEXT NOT NULL,
-    FOREIGN KEY (card_id) REFERENCES cards(id),
-    FOREIGN KEY (classroom_id) REFERENCES classrooms(id)
-);
+    PRIMARY KEY (card_id, classroom_id)
+    FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE ON UPDATE CASCADE
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS cards (
     id TEXT PRIMARY KEY,
