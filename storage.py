@@ -1,7 +1,8 @@
 import json
 import sqlite3
 
-from datetime import date
+from datetime import date, datetime, timedelta
+
 import os
 
 __REFS = "__REFS"
@@ -38,9 +39,11 @@ def generateDBPath():
 def __processName(name: str):
     name = name.removesuffix(".db")
     if name.count("-") == 2:
-        return name
+        return datetime.fromisoformat(name)
     else:
-        return name[name.index("-", -3):]
+        res = datetime.fromisoformat(name[:name.index("-", -3)])
+        res = res + timedelta(seconds= int(name[name.index("-", -3)+1:]) )
+        return res
 
 def getDBPath():
     databases = os.listdir("./database")
@@ -102,8 +105,12 @@ def storeData(jsonBlob):
 
 def parseJsonBlob(blob) -> dict[str, dict]:
     res = {}
+
     raw = json.loads(blob)
     for table in raw["r"]["dbiAccessorRes"]["tables"]:
+        if table["id"] not in STRUCTURE.keys(): 
+            continue # skip not unused
+        
         entries = {}
         for row in table["data_rows"]:
             if table["id"] == "lessons": # Combining groupnames into 1 string
