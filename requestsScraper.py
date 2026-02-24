@@ -22,7 +22,11 @@ def scrape():
 		s.get("https://finki.edupage.org/timetable/")
 		
 		gtvd = s.post(getTTViewDataURL,json = getTTViewDataPayload ).json()
-		default_num = gtvd["r"]["regular"]["default_num"]	
+		timetables = gtvd["r"]["regular"]["timetables"]
+
+		tt_filtered = [t for t in timetables if not t['hidden']]
+		tt_filtered.sort(key= lambda t: t['datefrom'], reverse=True)
+		default_num = tt_filtered[0]['tt_num']
 
 		regularGetDataPayload["__args"][1] = default_num 
 

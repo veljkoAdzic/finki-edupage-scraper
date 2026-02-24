@@ -108,5 +108,5 @@ def api_teachers():
     
 
 if __name__ == "__main__":
-    app.run(host="192.168.100.18", port=369, debug=True)
+    app.run(host="192.168.100.103", port=8080, debug=True)
   
